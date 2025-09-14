@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsive -->
+  <title>School Summary</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://picsum.photos/1080/1920?blur=3') no-repeat center center/cover;
+      /* you can replace the link above with your own */
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ===== Top Status Bar ===== */
+    .status-bar {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .battery {
+      background: #4caf50;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .alive {
+      color: #4caf50;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 8px;
+      border: 1px solid #4caf50;
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 5vw, 2rem); /* resizes by screen */
+      margin: 20px 0;
+      text-align: center;
+      color: #ffffff;
+      padding: 0 10px;
+    }
+
+    #summaries {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 0 15px 20px;
+    }
+
+    .summary {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      word-wrap: break-word; /* prevent overflow */
+    }
+
+    .summary h3 {
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      color: #ffeb3b;
+      margin-bottom: 8px;
+    }
+
+    .summary p {
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      color: #f5f5f5;
+      line-height: 1.4;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 15px;
+      font-size: 0.85rem;
+      color: #ccc;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="battery" id="battery">🔋 100%</div>
+    <div class="alive">Alive</div>
+  </div>
+
+  <h1>📘 School Daily Summary</h1>
+  <div id="summaries">Loading summaries...</div>
+
+  <footer>Made with ❤️ for our class</footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVB4lJbsI4KLmmtNv_zZHih52KLwsdmgs",
+      authDomain: "schoolsummary-7d349.firebaseapp.com",
+      projectId: "schoolsummary-7d349",
+      storageBucket: "schoolsummary-7d349.firebasestorage.app",
+      messagingSenderId: "539872820684",
+      appId: "1:539872820684:web:b7a40f285c4d03e38fb169",
+      measurementId: "G-37321WVRG4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadSummaries() {
+      const querySnapshot = await getDocs(collection(db, "summaries"));
+      let container = document.getElementById("summaries");
+      container.innerHTML = "";
+      querySnapshot.forEach((doc) => {
+        let data = doc.data();
+        let date = data.date || "⚠️ Missing date";
+        let subject = data.subject || "⚠️ Missing subject";
+        let page = data.page || "⚠️ Missing page";
+        let text = data.text || "⚠️ Missing summary";
+
+        container.innerHTML += `
+          <div class="summary">
+            <h3>${date} – ${subject} (p.${page})</h3>
+            <p>${text}</p>
+          </div>
+        `;
+      });
+    }
+    loadSummaries();
+  </script>
+
+  <script>
+    if (navigator.getBattery) {
+      navigator.getBattery().then(function(battery) {
+        function updateBattery() {
+          let percent = Math.round(battery.level * 100);
+          document.getElementById("battery").textContent = "🔋 " + percent + "%";
+        }
+        updateBattery();
+        battery.addEventListener("levelchange", updateBattery);
+      });
+    } else {
+      document.getElementById("battery").textContent = "🔋 100%";
+    }
+  </script>
+</body>
+</html>
