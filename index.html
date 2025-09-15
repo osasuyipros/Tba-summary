@@ -1,131 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsive -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>School Summary</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background: url('https://i.imgur.com/lS5zbQD.png') no-repeat center center/cover;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      color:#fff;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
     }
-
-    /* ===== Top Status Bar ===== */
-    .status-bar {
-      width: 100%;
-      background: rgba(0,0,0,0.4);
-      padding: 8px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: clamp(0.8rem, 2.5vw, 1rem);
+    .status-bar{
+      width:100%;
+      background:rgba(0,0,0,0.4);
+      padding:8px 15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:clamp(0.8rem,2.5vw,1rem);
     }
-
-    .battery {
-      background: #4caf50;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 8px;
-      font-weight: 500;
+    .battery{background:#4caf50;color:white;padding:3px 8px;border-radius:8px;font-weight:500}
+    .alive{color:#4caf50;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:8px;border:1px solid #4caf50}
+    h1{
+      font-size:clamp(1.8rem,6vw,2.5rem);
+      margin:20px 0;text-align:center;color:#FFD700;font-weight:900;padding:0 10px;text-shadow:2px 2px 5px rgba(0,0,0,0.6)
     }
-
-    .alive {
-      color: #4caf50;
-      font-weight: 600;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 8px;
-      border: 1px solid #4caf50;
+    #summaries{
+      width:100%;
+      max-width:800px;
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+      padding:0 15px 20px;
     }
-
-    h1 {
-      font-size: clamp(1.8rem, 6vw, 2.5rem);
-      margin: 20px 0;
-      text-align: center;
-      color: #FFD700; /* bright gold heading */
-      font-weight: 900; /* bold */
-      padding: 0 10px;
-      text-shadow: 2px 2px 5px rgba(0,0,0,0.6);
+    .summary{
+      background:rgba(0,0,0,0.55);
+      padding:15px 20px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.1);
+      word-wrap:break-word;
     }
-
-    #summaries {
-      width: 100%;
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      padding: 0 15px 20px;
+    .summary p{margin:6px 0;color:#f5f5f5}
+    .summary strong{color:#ffeb3b}
+    .join-btn{
+      display:inline-block;margin:20px auto;padding:12px 25px;font-size:clamp(1rem,3vw,1.1rem);
+      font-weight:600;color:#fff;background:linear-gradient(135deg,#25d366,#128c7e);
+      border-radius:30px;text-decoration:none;text-align:center
     }
-
-    .summary {
-      background: rgba(0, 0, 0, 0.55);
-      padding: 15px 20px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      word-wrap: break-word;
-    }
-
-    .summary h3 {
-      font-size: clamp(1rem, 4vw, 1.3rem);
-      color: #ffeb3b;
-      margin-bottom: 8px;
-    }
-
-    .summary p {
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      color: #f5f5f5;
-      line-height: 1.5;
-    }
-
-    /* ===== Button Style ===== */
-    .join-btn {
-      display: inline-block;
-      margin: 20px auto;
-      padding: 12px 25px;
-      font-size: clamp(1rem, 3vw, 1.1rem);
-      font-weight: 600;
-      color: #fff;
-      background: linear-gradient(135deg, #25d366, #128c7e); /* WhatsApp green */
-      border: none;
-      border-radius: 30px;
-      text-decoration: none;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .join-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 15px;
-      font-size: clamp(0.75rem, 2.5vw, 0.95rem);
-      color: #ccc;
-      text-align: center;
-    }
-
-    /* ===== Responsive Tweaks ===== */
-    @media (max-width: 600px) {
-      body {
-        padding: 0 5px;
-      }
-      .summary {
-        padding: 12px 15px;
-      }
-    }
+    .join-btn:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+    footer{margin-top:auto;padding:15px;font-size:clamp(0.75rem,2.5vw,0.95rem);color:#ccc;text-align:center}
   </style>
 </head>
 <body>
-  <!-- Status bar -->
+  <!-- Password protection -->
+  <script>
+    if (sessionStorage.getItem("school_auth") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <div class="status-bar">
     <div class="battery" id="battery">🔋 100%</div>
     <div class="alive">Alive</div>
@@ -134,13 +72,13 @@
   <h1>📘 𝐒𝐂𝐇𝐎𝐎𝐋 𝐃𝐀𝐈𝐋𝐘 𝐒𝐔𝐌𝐌𝐀𝐑𝐘</h1>
   <div id="summaries">Loading summaries...</div>
 
-  <!-- Join Group Button -->
   <a href="https://chat.whatsapp.com/L4cFTnriD9H1TsogHSpayy" target="_blank" class="join-btn">
     💬 Join Our Official Group
   </a>
 
   <footer>Made with ❤️ for our class</footer>
 
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
@@ -168,11 +106,15 @@
         let subject = data.subject || "⚠️ Missing subject";
         let page = data.page || "⚠️ Missing page";
         let text = data.text || "⚠️ Missing summary";
+        let exercise = data.exercise || "⚠️ Missing exercise";
 
         container.innerHTML += `
           <div class="summary">
-            <h3>${date} – ${subject} (p.${page})</h3>
-            <p>${text}</p>
+            <p><strong>📅 Date:</strong> ${date}</p>
+            <p><strong>📘 Subject:</strong> ${subject}</p>
+            <p><strong>📖 Page:</strong> ${page}</p>
+            <p><strong>📝 Summary:</strong> ${text}</p>
+            <p><strong>📂 Exercise:</strong> ${exercise}</p>
           </div>
         `;
       });
