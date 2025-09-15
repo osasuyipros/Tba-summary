@@ -84,7 +84,7 @@
     💬 Join Our Official Group
   </a>
 
-  <footer>Made with ❤️ for our class</footer>
+  <footer>Made by pros tech 💀☠️ 2025 ♥️ </footer>
 
   <!-- Firebase -->
   <script type="module">
@@ -107,6 +107,16 @@
     // 👇 Add all your collections here
     const collections = ["summaries", "summaries2", "summaries3"];
 
+    // Helper to safely get a field (handles uppercase/lowercase differences)
+    function getField(data, keys, fallback="⚠️ Missing") {
+      for (let key of keys) {
+        if (data[key] !== undefined && data[key] !== "") {
+          return data[key];
+        }
+      }
+      return fallback;
+    }
+
     async function loadAll() {
       const container = document.getElementById("summaries-container");
       container.innerHTML = "";
@@ -125,13 +135,20 @@
         } else {
           snap.forEach((doc) => {
             const data = doc.data();
+
+            const date = getField(data, ["date", "Date"]);
+            const subject = getField(data, ["subject", "Subject"]);
+            const page = getField(data, ["page", "Page"]);
+            const text = getField(data, ["text", "summary", "Summary"]);
+            const exercise = getField(data, ["exercise", "Exercise"]);
+
             section.innerHTML += `
               <div class="summary">
-                <p><strong>📅 Date:</strong> ${data.date || "⚠️ Missing"}</p>
-                <p><strong>📘 Subject:</strong> ${data.subject || "⚠️ Missing"}</p>
-                <p><strong>📖 Page:</strong> ${data.page || "⚠️ Missing"}</p>
-                <p><strong>📝 Summary:</strong> ${data.text || "⚠️ Missing"}</p>
-                <p><strong>📂 Exercise:</strong> ${data.exercise || "⚠️ Missing"}</p>
+                <p><strong>📅 Date:</strong> ${date}</p>
+                <p><strong>📘 Subject:</strong> ${subject}</p>
+                <p><strong>📖 Page:</strong> ${page}</p>
+                <p><strong>📝 Summary:</strong> ${text}</p>
+                <p><strong>📂 Exercise:</strong> ${exercise}</p>
               </div>
             `;
           });
