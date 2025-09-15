@@ -30,13 +30,19 @@
       font-size:clamp(1.8rem,6vw,2.5rem);
       margin:20px 0;text-align:center;color:#FFD700;font-weight:900;padding:0 10px;text-shadow:2px 2px 5px rgba(0,0,0,0.6)
     }
-    #summaries{
+    h2{
+      font-size:1.3rem;
+      margin:20px 0 10px;
+      text-align:left;
+      color:#FFD700;
+    }
+    #summaries-container{
       width:100%;
-      max-width:800px;
+      max-width:900px;
+      padding:0 15px 40px;
       display:flex;
       flex-direction:column;
-      gap:15px;
-      padding:0 15px 20px;
+      gap:40px; /* space between collections */
     }
     .summary{
       background:rgba(0,0,0,0.55);
@@ -44,6 +50,7 @@
       border-radius:12px;
       border:1px solid rgba(255,255,255,0.1);
       word-wrap:break-word;
+      margin-bottom:15px;
     }
     .summary p{margin:6px 0;color:#f5f5f5}
     .summary strong{color:#ffeb3b}
@@ -70,7 +77,8 @@
   </div>
 
   <h1>📘 𝐒𝐂𝐇𝐎𝐎𝐋 𝐃𝐀𝐈𝐋𝐘 𝐒𝐔𝐌𝐌𝐀𝐑𝐘</h1>
-  <div id="summaries">Loading summaries...</div>
+  
+  <div id="summaries-container">Loading summaries...</div>
 
   <a href="https://chat.whatsapp.com/L4cFTnriD9H1TsogHSpayy" target="_blank" class="join-btn">
     💬 Join Our Official Group
@@ -96,30 +104,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function loadSummaries() {
-      const querySnapshot = await getDocs(collection(db, "summaries"));
-      let container = document.getElementById("summaries");
-      container.innerHTML = "";
-      querySnapshot.forEach((doc) => {
-        let data = doc.data();
-        let date = data.date || "⚠️ Missing date";
-        let subject = data.subject || "⚠️ Missing subject";
-        let page = data.page || "⚠️ Missing page";
-        let text = data.text || "⚠️ Missing summary";
-        let exercise = data.exercise || "⚠️ Missing exercise";
+    // 👇 Add all your collections here
+    const collections = ["summaries", "summaries2", "summaries3"];
 
-        container.innerHTML += `
-          <div class="summary">
-            <p><strong>📅 Date:</strong> ${date}</p>
-            <p><strong>📘 Subject:</strong> ${subject}</p>
-            <p><strong>📖 Page:</strong> ${page}</p>
-            <p><strong>📝 Summary:</strong> ${text}</p>
-            <p><strong>📂 Exercise:</strong> ${exercise}</p>
-          </div>
-        `;
-      });
+    async function loadAll() {
+      const container = document.getElementById("summaries-container");
+      container.innerHTML = "";
+
+      for (let colName of collections) {
+        const snap = await getDocs(collection(db, colName));
+
+        let section = document.createElement("div");
+
+        let title = document.createElement("h2");
+        title.textContent = `📂 ${colName}`;
+        section.appendChild(title);
+
+        if (snap.empty) {
+          section.innerHTML += "<p style='color:#ccc'>No summaries yet.</p>";
+        } else {
+          snap.forEach((doc) => {
+            const data = doc.data();
+            section.innerHTML += `
+              <div class="summary">
+                <p><strong>📅 Date:</strong> ${data.date || "⚠️ Missing"}</p>
+                <p><strong>📘 Subject:</strong> ${data.subject || "⚠️ Missing"}</p>
+                <p><strong>📖 Page:</strong> ${data.page || "⚠️ Missing"}</p>
+                <p><strong>📝 Summary:</strong> ${data.text || "⚠️ Missing"}</p>
+                <p><strong>📂 Exercise:</strong> ${data.exercise || "⚠️ Missing"}</p>
+              </div>
+            `;
+          });
+        }
+
+        container.appendChild(section);
+      }
     }
-    loadSummaries();
+
+    loadAll();
   </script>
 
   <script>
