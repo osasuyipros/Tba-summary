@@ -61,119 +61,62 @@
     </div>
 
     <!-- Summaries list -->
-    <div id="summaries-container">Loading summaries...</div>
+    <div id="summaries-container">No summaries yet.</div>
 
     <footer>Made with ❤️ for our class</footer>
   </div>
 
-  <!-- Firebase Scripts -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBVB4lJbsI4KLmmtNv_zZHih52KLwsdmgs",
-      authDomain: "schoolsummary-7d349.firebaseapp.com",
-      projectId: "schoolsummary-7d349",
-      storageBucket: "schoolsummary-7d349.firebasestorage.app",
-      messagingSenderId: "539872820684",
-      appId: "1:539872820684:web:b7a40f285c4d03e38fb169",
-      measurementId: "G-37321WVRG4"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-
+  <script>
     let userRole = null; // "student" or "admin"
+    let summaries = [];  // local storage for summaries
 
-    window.login = function() {
+    function login() {
       const password = document.getElementById("password").value;
       const message = document.getElementById("loginMessage");
 
       if (password === "Tba") {
         userRole = "student";
-        sessionStorage.setItem("school_auth", "student");
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
-        loadSummaries();
+        renderSummaries();
       } else if (password === "Admin123") {
         userRole = "admin";
-        sessionStorage.setItem("school_auth", "admin");
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
-        document.getElementById("postForm").style.display = "block"; // show posting form
-        loadSummaries();
+        document.getElementById("postForm").style.display = "block";
+        renderSummaries();
       } else {
         message.textContent = "Invalid password!";
         message.className = "error";
       }
     }
 
-    async function loadSummaries() {
-      const container = document.getElementById("summaries-container");
-      container.innerHTML = "";
-      const snap = await getDocs(collection(db, "summaries"));
-
-      if (snap.empty) {
-        container.innerHTML = "<p>No summaries yet.</p>";
-      } else {
-        snap.forEach((docSnap) => {
-          const data = docSnap.data();
-          const id = docSnap.id;
-
-          let html = `
-            <div class="summary">
-              <p><strong>📅 Date:</strong> ${data.date || ""}</p>
-              <p><strong>📘 Subject:</strong> ${data.subject || ""}</p>
-              <p><strong>📖 Page:</strong> ${data.page || ""}</p>
-              <p><strong>📝 Summary:</strong> ${data.text || ""}</p>
-              <p><strong>📂 Exercise:</strong> ${data.exercise || ""}</p>
-              ${data.imageUrl ? `<img src="${data.imageUrl}">` : ""}
-          `;
-
-          if (userRole === "admin") {
-            html += `<button class="delete-btn" onclick="deleteSummary('${id}')">🗑️ Delete</button>`;
-          }
-
-          html += `</div>`;
-          container.innerHTML += html;
-        });
-      }
-    }
-
-    window.deleteSummary = async function(id) {
-      if (confirm("Are you sure you want to delete this summary?")) {
-        await deleteDoc(doc(db, "summaries", id));
-        loadSummaries();
-      }
-    }
-
-    document.getElementById("postBtn").addEventListener("click", async () => {
+    document.getElementById("postBtn").onclick = () => {
       const date = document.getElementById("date").value;
       const subject = document.getElementById("subject").value;
       const page = document.getElementById("page").value;
       const exercise = document.getElementById("exercise").value;
       const text = document.getElementById("text").value;
       const file = document.getElementById("image").files[0];
-      const message = document.getElementById("postMessage");
+      const msg = document.getElementById("postMessage");
+
+      if (!date || !subject || !page || !text) {
+        msg.textContent = "⚠️ Please fill in all fields!";
+        msg.className = "error";
+        return;
+      }
 
       let imageUrl = "";
       if (file) {
-        const storageRef = ref(storage, "summaries/" + Date.now() + "_" + file.name);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
+        imageUrl = URL.createObjectURL(file); // local preview only
       }
 
-      await addDoc(collection(db, "summaries"), {
-        date, subject, page, exercise, text, imageUrl
-      });
+      summaries.push({ id: Date.now(), date, subject, page, exercise, text, imageUrl });
 
-      message.textContent = "✅ Summary posted successfully!";
-      message.className = "success";
+      msg.textContent = "✅ Summary posted successfully!";
+      msg.className = "success";
 
-      // clear form
+      // Clear form
       document.getElementById("date").value = "";
       document.getElementById("subject").value = "";
       document.getElementById("page").value = "";
@@ -181,8 +124,39 @@
       document.getElementById("text").value = "";
       document.getElementById("image").value = "";
 
-      loadSummaries();
-    });
+      renderSummaries();
+    };
+
+    function renderSummaries() {
+      const container = document.getElementById("summaries-container");
+      container.innerHTML = "";
+      if (summaries.length === 0) {
+        container.innerHTML = "<p>No summaries yet.</p>";
+        return;
+      }
+
+      summaries.forEach((s) => {
+        let html = `
+          <div class="summary">
+            <p><strong>📅 Date:</strong> ${s.date}</p>
+            <p><strong>📘 Subject:</strong> ${s.subject}</p>
+            <p><strong>📖 Page:</strong> ${s.page}</p>
+            <p><strong>📝 Summary:</strong> ${s.text}</p>
+            <p><strong>📂 Exercise:</strong> ${s.exercise}</p>
+            ${s.imageUrl ? `<img src="${s.imageUrl}">` : ""}
+        `;
+        if (userRole === "admin") {
+          html += `<button class="delete-btn" onclick="deleteSummary(${s.id})">🗑️ Delete</button>`;
+        }
+        html += `</div>`;
+        container.innerHTML += html;
+      });
+    }
+
+    function deleteSummary(id) {
+      summaries = summaries.filter(s => s.id !== id);
+      renderSummaries();
+    }
   </script>
 </body>
 </html>
