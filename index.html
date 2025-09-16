@@ -8,9 +8,19 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{
       font-family: "Segoe UI", sans-serif;
-      background: url('https://i.imgur.com/lS5zbQD.png') no-repeat center center/cover;
       color:#fff; min-height:100vh;
       display:flex; flex-direction:column; align-items:center;
+    }
+    /* Login page background */
+    #loginPage {
+      background: url('https://files.catbox.moe/fph1r2.png') no-repeat center center/cover;
+      width:100%; height:100vh;
+      display:flex; justify-content:center; align-items:center;
+    }
+    .login-box{
+      background:rgba(0,0,0,0.7);
+      padding:25px; border-radius:12px; text-align:center;
+      width:300px;
     }
     .status-bar{
       width:100%;
@@ -23,11 +33,6 @@
     }
     .battery{background:#4caf50;color:white;padding:3px 8px;border-radius:8px;font-weight:500}
     .alive{color:#4caf50;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:8px;border:1px solid #4caf50}
-    .login-box{
-      margin:auto; background:rgba(0,0,0,0.7);
-      padding:25px; border-radius:12px; text-align:center;
-      width:300px;
-    }
     input, textarea{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:none}
     button{padding:10px 20px;border:none;border-radius:8px;background:#0d6efd;color:#fff;font-weight:bold;cursor:pointer}
     button:hover{background:#0b5ed7}
@@ -41,17 +46,41 @@
     .summary img{max-width:100%;margin-top:10px;border-radius:8px}
     .delete-btn{background:red;margin-top:8px}
     .form-box{background:rgba(0,0,0,0.6);padding:20px;border-radius:12px;margin:20px auto;width:90%;max-width:600px;display:none}
+    .join-btn{
+      display:block; text-align:center; margin:20px auto;
+      background:#25D366; color:white; padding:12px 20px;
+      font-size:1rem; font-weight:bold; border-radius:8px;
+      text-decoration:none; width:max-content;
+    }
+    .join-btn:hover{background:#1ebe5d}
+    .developer-credit {
+      text-align:center;
+      margin:10px 0;
+      font-size:0.9rem;
+      color:#aaa;
+    }
+    .developer-credit strong {
+      color:#FFD700;
+    }
     footer{margin-top:auto;padding:15px;color:#ccc;text-align:center}
+    /* Main page background */
+    #mainPage {
+      background: url('https://i.imgur.com/lS5zbQD.png') no-repeat center center/cover;
+      min-height:100vh;
+      width:100%;
+    }
   </style>
 </head>
 <body>
 
   <!-- Login Page -->
-  <div id="loginPage" class="login-box">
-    <h2>School Summary Login</h2>
-    <input type="password" id="password" placeholder="Enter Password">
-    <button onclick="login()">Login</button>
-    <p id="loginMessage"></p>
+  <div id="loginPage">
+    <div class="login-box">
+      <h2>School Summary Login</h2>
+      <input type="password" id="password" placeholder="Enter Password">
+      <button onclick="login()">Login</button>
+      <p id="loginMessage"></p>
+    </div>
   </div>
 
   <!-- Main Content -->
@@ -66,7 +95,7 @@
     <!-- Admin post form -->
     <div class="form-box" id="postForm">
       <h2>Post a New Summary</h2>
-      <input id="date" placeholder="Date (e.g. 16 Sept 2025)">
+      <input id="date" placeholder="Date (auto-filled)" readonly>
       <input id="subject" placeholder="Subject (e.g. Math)">
       <input id="page" placeholder="Page (e.g. 22)">
       <input id="exercise" placeholder="Exercise (e.g. Exercise 5)">
@@ -79,6 +108,16 @@
     <!-- Summaries list -->
     <div id="summaries-container">Loading summaries...</div>
 
+    <!-- Join Group button (only for students) -->
+    <a id="joinGroup" class="join-btn" href="https://chat.whatsapp.com/L4cFTnriD9H1TsogHSpayy" target="_blank" style="display:none;">
+      💬 Join Our Official Group
+    </a>
+
+    <!-- Developer Credit -->
+    <div class="developer-credit">
+      For the developer: <strong>Pros Tech</strong>
+    </div>
+
     <footer>Made with ❤️ for our class</footer>
   </div>
 
@@ -87,7 +126,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBVB4lJbsI4KLmmtNv_zZHih52KLwsdmgs",
       authDomain: "schoolsummary-7d349.firebaseapp.com",
@@ -104,6 +142,15 @@
 
     let userRole = null;
 
+    function getTodayDate() {
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
+      const today = new Date();
+      const day = today.getDate();
+      const month = months[today.getMonth()];
+      const year = today.getFullYear();
+      return `${day} ${month} ${year}`;
+    }
+
     window.login = function() {
       const password = document.getElementById("password").value;
       const message = document.getElementById("loginMessage");
@@ -112,6 +159,8 @@
         userRole = "student";
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
+        document.getElementById("joinGroup").style.display = "block"; // show group button
+        history.pushState({page:"main"},"","#main");
         loadSummaries();
         initBattery();
       } else if (password === "Admin123") {
@@ -119,6 +168,8 @@
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
         document.getElementById("postForm").style.display = "block";
+        document.getElementById("date").value = getTodayDate(); // auto-fill date
+        history.pushState({page:"main"},"","#main");
         loadSummaries();
         initBattery();
 
@@ -131,7 +182,6 @@
           const imageUrl = document.getElementById("imageLink").value;
           const msg = document.getElementById("postMessage");
 
-          // Only block if EVERYTHING is empty
           if (!date && !subject && !page && !exercise && !text && !imageUrl) {
             msg.textContent = "⚠️ Please enter something before posting!";
             msg.className = "error";
@@ -143,13 +193,12 @@
           msg.textContent = "✅ Summary posted successfully!";
           msg.className = "success";
 
-          // Clear form
-          document.getElementById("date").value = "";
           document.getElementById("subject").value = "";
           document.getElementById("page").value = "";
           document.getElementById("exercise").value = "";
           document.getElementById("text").value = "";
           document.getElementById("imageLink").value = "";
+          document.getElementById("date").value = getTodayDate(); // reset to today
 
           loadSummaries();
         };
@@ -210,6 +259,12 @@
         });
       }
     }
+
+    // 🔙 Handle back button
+    window.onpopstate = function(e){
+      document.getElementById("mainPage").style.display="none";
+      document.getElementById("loginPage").style.display="flex";
+    };
   </script>
 </body>
 </html>
