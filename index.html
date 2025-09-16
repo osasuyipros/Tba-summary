@@ -28,7 +28,8 @@
     .alive{color:#4caf50;font-weight:600;text-transform:uppercase;padding:3px 8px;border-radius:8px;border:1px solid #4caf50}
     h1{
       font-size:clamp(1.8rem,6vw,2.5rem);
-      margin:20px 0;text-align:center;color:#FFD700;font-weight:900;padding:0 10px;text-shadow:2px 2px 5px rgba(0,0,0,0.6)
+      margin:20px 0;text-align:center;color:#FFD700;font-weight:900;
+      text-shadow:2px 2px 5px rgba(0,0,0,0.6)
     }
     h2{
       font-size:1.3rem;
@@ -42,29 +43,62 @@
       padding:0 15px 40px;
       display:flex;
       flex-direction:column;
-      gap:40px; /* space between collections */
+      gap:40px;
     }
     .summary{
       background:rgba(0,0,0,0.55);
       padding:15px 20px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,0.1);
-      word-wrap:break-word;
       margin-bottom:15px;
     }
     .summary p{margin:6px 0;color:#f5f5f5}
     .summary strong{color:#ffeb3b}
+    .summary img{
+      max-width:100%;
+      margin-top:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.2);
+    }
+    .form-box{
+      width:100%;
+      max-width:600px;
+      background:rgba(0,0,0,0.6);
+      padding:20px;
+      border-radius:12px;
+      margin:20px auto;
+      display:none; /* hidden by default */
+    }
+    input, textarea{
+      width:100%;
+      padding:10px;
+      margin-bottom:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.1);
+      color:#fff;
+      font-size:1rem;
+    }
+    button{
+      padding:12px 20px;
+      border:none;
+      border-radius:8px;
+      background:#0d6efd;
+      color:#fff;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    button:hover{background:#0b5ed7}
     .join-btn{
       display:inline-block;margin:20px auto;padding:12px 25px;font-size:clamp(1rem,3vw,1.1rem);
       font-weight:600;color:#fff;background:linear-gradient(135deg,#25d366,#128c7e);
       border-radius:30px;text-decoration:none;text-align:center
     }
-    .join-btn:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,0,0,0.4)}
     footer{margin-top:auto;padding:15px;font-size:clamp(0.75rem,2.5vw,0.95rem);color:#ccc;text-align:center}
   </style>
 </head>
 <body>
-  <!-- Password protection -->
+  <!-- Password protection (site-wide login) -->
   <script>
     if (sessionStorage.getItem("school_auth") !== "true") {
       window.location.href = "login.html";
@@ -78,18 +112,31 @@
 
   <h1>📘 𝐒𝐂𝐇𝐎𝐎𝐋 𝐃𝐀𝐈𝐋𝐘 𝐒𝐔𝐌𝐌𝐀𝐑𝐘</h1>
   
+  <!-- Post form (only for admin, hidden by default) -->
+  <div class="form-box" id="postForm">
+    <h2>Post a New Summary</h2>
+    <input id="date" placeholder="Date (e.g. 16 Sept 2025)">
+    <input id="subject" placeholder="Subject (e.g. Math)">
+    <input id="page" placeholder="Page (e.g. 22)">
+    <input id="exercise" placeholder="Exercise (e.g. Exercise 5)">
+    <textarea id="text" rows="3" placeholder="Summary text..."></textarea>
+    <input type="file" id="image" accept="image/*">
+    <button id="postBtn">Post Summary</button>
+  </div>
+
   <div id="summaries-container">Loading summaries...</div>
 
   <a href="https://chat.whatsapp.com/L4cFTnriD9H1TsogHSpayy" target="_blank" class="join-btn">
     💬 Join Our Official Group
   </a>
 
-  <footer>Made by pros tech 💀☠️ 2025 ♥️ </footer>
+  <footer>Made with ❤️ for our class</footer>
 
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBVB4lJbsI4KLmmtNv_zZHih52KLwsdmgs",
@@ -103,11 +150,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
-    // 👇 Add all your collections here
     const collections = ["summaries", "summaries2", "summaries3"];
 
-    // Helper to safely get a field (handles uppercase/lowercase differences)
     function getField(data, keys, fallback="⚠️ Missing") {
       for (let key of keys) {
         if (data[key] !== undefined && data[key] !== "") {
@@ -136,21 +182,26 @@
           snap.forEach((doc) => {
             const data = doc.data();
 
-            const date = getField(data, ["date", "Date"]);
-            const subject = getField(data, ["subject", "Subject"]);
-            const page = getField(data, ["page", "Page"]);
-            const text = getField(data, ["text", "summary", "Summary"]);
-            const exercise = getField(data, ["exercise", "Exercise"]);
+            const date = getField(data, ["date","Date"]);
+            const subject = getField(data, ["subject","Subject"]);
+            const page = getField(data, ["page","Page"]);
+            const text = getField(data, ["text","summary","Summary"]);
+            const exercise = getField(data, ["exercise","Exercise"]);
+            const imageUrl = getField(data, ["imageUrl","Image","ImageURL"], "");
 
-            section.innerHTML += `
+            let summaryHtml = `
               <div class="summary">
                 <p><strong>📅 Date:</strong> ${date}</p>
                 <p><strong>📘 Subject:</strong> ${subject}</p>
                 <p><strong>📖 Page:</strong> ${page}</p>
                 <p><strong>📝 Summary:</strong> ${text}</p>
                 <p><strong>📂 Exercise:</strong> ${exercise}</p>
-              </div>
             `;
+            if (imageUrl && imageUrl !== "⚠️ Missing") {
+              summaryHtml += `<img src="${imageUrl}" alt="Summary image">`;
+            }
+            summaryHtml += `</div>`;
+            section.innerHTML += summaryHtml;
           });
         }
 
@@ -158,10 +209,35 @@
       }
     }
 
+    // Post button
+    document.getElementById("postBtn").addEventListener("click", async () => {
+      const date = document.getElementById("date").value;
+      const subject = document.getElementById("subject").value;
+      const page = document.getElementById("page").value;
+      const exercise = document.getElementById("exercise").value;
+      const text = document.getElementById("text").value;
+      const file = document.getElementById("image").files[0];
+
+      let imageUrl = "";
+      if (file) {
+        const storageRef = ref(storage, "summaries/" + Date.now() + "_" + file.name);
+        await uploadBytes(storageRef, file);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      await addDoc(collection(db, "summaries"), {
+        date, subject, page, exercise, text, imageUrl
+      });
+
+      alert("Summary posted!");
+      loadAll();
+    });
+
     loadAll();
   </script>
 
   <script>
+    // Battery display
     if (navigator.getBattery) {
       navigator.getBattery().then(function(battery) {
         function updateBattery() {
@@ -173,6 +249,13 @@
       });
     } else {
       document.getElementById("battery").textContent = "🔋 100%";
+    }
+
+    // 🔑 Admin unlock for posting form
+    const adminPassword = "Post123"; // change this to your secret
+    const isAdmin = prompt("Enter admin password to enable posting (or leave blank to view only):");
+    if (isAdmin === adminPassword) {
+      document.getElementById("postForm").style.display = "block";
     }
   </script>
 </body>
